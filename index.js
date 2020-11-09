@@ -119,11 +119,11 @@ LiveReloadPlugin.prototype.done = function done(stats) {
       })
   ;
 
-  if (this.isRunning && (hash !== this.lastHash || !arraysEqual(childHashes, this.lastChildHashes)) && include.length > 0) {
+  if (this.isRunning && (hash !== this.lastHash)) {
     this.lastHash = hash;
     this.lastChildHashes = childHashes;
     setTimeout(function onTimeout() {
-      this.server.notifyClients(include);
+      this.server.notifyClients(['']);
     }.bind(this), this.delay);
   }
 };
@@ -161,7 +161,13 @@ LiveReloadPlugin.prototype.scriptTag = function scriptTag(source) {
 };
 
 LiveReloadPlugin.prototype.applyCompilation = function applyCompilation(compilation) {
-  compilation.mainTemplate.hooks.startup.tap('LiveReloadPlugin', this.scriptTag.bind(this));
+  try {
+    compilation.mainTemplate.hooks.startup.tap('LiveReloadPlugin', this.scriptTag.bind(this));
+  } catch {
+    if (this.options.appendScriptTag) {
+      console.warn('WARNING: webpack-livereload-plugin currently can\'t append the script tag in webpack 5');
+    }
+  }
 };
 
 LiveReloadPlugin.prototype.apply = function apply(compiler) {
